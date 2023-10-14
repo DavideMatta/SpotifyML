@@ -13,6 +13,8 @@ class RidgeRegression:
     def fit(self, X, y):
         n_samples, n_features = X.shape
         X = np.column_stack([np.ones(n_samples), X])
+        I = np.identity(n_features + 1)
+        I[0][0] = 0
         
         kf = KFold(n_splits=self.n_splits, shuffle=True, random_state=self.random_state)
 
@@ -25,9 +27,8 @@ class RidgeRegression:
             X_train, X_val = X[train_index], X[val_index]
             y_train, y_val = y[train_index], y[val_index]
 
-            A = X_train.T.dot(X_train) + self.alpha * np.identity(n_features + 1)
-            b = X_train.T.dot(y_train)
-            weights = np.linalg.solve(A, b)
+            XTX = np.dot(X_train.T, X_train)
+            weights = np.linalg.inv(XTX + self.alpha * I).dot(X_train.T).dot(y_train)
 
             val_predictions = X_val.dot(weights)
             val_score = np.mean((val_predictions - y_val) ** 2)
